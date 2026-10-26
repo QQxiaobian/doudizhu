@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线斗地主</title>
+  <link rel="stylesheet" href="/css/style.css?v=1.0.1">
+</head>
+<body>
+  <!-- 登录/注册页 -->
+  <div id="authView" class="view active">
+    <div class="auth-container">
+      <h1 class="logo">🃏 在线斗地主</h1>
+      <div class="auth-tabs">
+        <button class="tab-btn active" data-tab="login">登录</button>
+        <button class="tab-btn" data-tab="register">注册</button>
+      </div>
+      <form id="loginForm" class="auth-form active">
+        <input type="text" id="loginUsername" placeholder="用户名" required>
+        <input type="password" id="loginPassword" placeholder="密码" required>
+        <button type="submit" class="btn-primary">登录</button>
+        <p class="hint">管理员账号：admin / admin123</p>
+      </form>
+      <form id="registerForm" class="auth-form">
+        <input type="text" id="regUsername" placeholder="用户名（至少3位）" required minlength="3">
+        <input type="text" id="regNickname" placeholder="昵称（可选）">
+        <input type="password" id="regPassword" placeholder="密码（至少6位）" required minlength="6">
+        <button type="submit" class="btn-primary">注册并登录</button>
+      </form>
+      <p id="authError" class="error"></p>
+    </div>
+  </div>
+
+  <!-- 大厅 -->
+  <div id="lobbyView" class="view">
+    <header class="top-bar">
+      <span class="logo-small">🃏 斗地主</span>
+      <div class="user-info">
+        <span id="userNickname"></span>
+        <span class="stats" id="userStats"></span>
+        <button id="toggleSound" class="icon-btn" title="音效">🔊</button>
+        <button id="toggleMusic" class="icon-btn" title="音乐">🎵</button>
+        <button id="toggleCounter" class="icon-btn" title="记牌器">📋</button>
+        <button id="adminBtn" class="icon-btn" style="display:none" title="管理后台">⚙️</button>
+        <button id="logoutBtn" class="icon-btn" title="退出">🚪</button>
+      </div>
+    </header>
+    <div class="lobby-content">
+      <div class="lobby-card" id="createAiRoom">
+        <h2>🤖 人机对战</h2>
+        <p>与两个 AI 玩家对战，练习牌技</p>
+        <button class="btn-primary">开始人机对战</button>
+      </div>
+      <div class="lobby-card" id="createFriendRoom">
+        <h2>👥 好友联机</h2>
+        <p>创建房间，邀请好友加入</p>
+        <button class="btn-primary">创建好友房间</button>
+      </div>
+      <div class="lobby-card" id="joinFriendRoom">
+        <h2>🚪 加入房间</h2>
+        <p>输入好友分享的房间号</p>
+        <input type="text" id="joinRoomId" placeholder="房间号" maxlength="6">
+        <button class="btn-primary">加入房间</button>
+      </div>
+    </div>
+    <div id="roomWaitPanel" class="room-wait" style="display:none">
+      <h2>房间号：<span id="roomIdDisplay"></span></h2>
+      <p class="hint">将房间号分享给好友即可一起游戏</p>
+      <div id="roomPlayersList" class="players-list"></div>
+      <button id="leaveRoomBtn" class="btn-secondary">离开房间</button>
+    </div>
+  </div>
+
+  <!-- 游戏页 -->
+  <div id="gameView" class="view">
+    <header class="game-top-bar">
+      <button id="backToLobby" class="icon-btn">← 返回大厅</button>
+      <span class="game-info">倍数：<span id="multiplier">1</span></span>
+      <span class="game-info" id="roomIdGame"></span>
+      <button id="leaveGameBtn" class="icon-btn">离开</button>
+    </header>
+    <div class="game-board">
+      <!-- 上方玩家（座位 1） -->
+      <div class="player-area top" data-seat="1">
+        <div class="player-info">
+          <span class="player-name" id="player1Name">玩家2</span>
+          <span class="landlord-tag" id="player1Landlord" style="display:none">地主</span>
+          <span class="card-count" id="player1Count">0</span>
+        </div>
+        <div class="played-cards" id="player1Played"></div>
+        <div class="pass-tag" id="player1Pass" style="display:none">不要</div>
+      </div>
+      <!-- 左方玩家（座位 2） -->
+      <div class="player-area left" data-seat="2">
+        <div class="player-info">
+          <span class="player-name" id="player2Name">玩家3</span>
+          <span class="landlord-tag" id="player2Landlord" style="display:none">地主</span>
+          <span class="card-count" id="player2Count">0</span>
+        </div>
+        <div class="played-cards" id="player2Played"></div>
+        <div class="pass-tag" id="player2Pass" style="display:none">不要</div>
+      </div>
+      <!-- 中央信息 -->
+      <div class="center-info">
+        <div id="biddingPanel" class="bidding-panel" style="display:none">
+          <p>叫地主阶段</p>
+          <p>当前叫分：<span id="currentBid">0</span></p>
+          <div class="bid-buttons" id="bidButtons"></div>
+        </div>
+        <div class="bottom-cards">
+          <span class="hint">底牌：</span>
+          <div id="bottomCardsDisplay" class="bottom-cards-list"></div>
+        </div>
+        <div id="gameEndPanel" class="game-end-panel" style="display:none">
+          <h2 id="gameEndTitle">游戏结束</h2>
+          <p id="gameEndDesc"></p>
+          <button id="playAgainBtn" class="btn-primary">再来一局</button>
+        </div>
+      </div>
+      <!-- 底部玩家（自己，座位 0） -->
+      <div class="player-area bottom" data-seat="0">
+        <div class="player-info">
+          <span class="player-name" id="player0Name">我</span>
+          <span class="landlord-tag" id="player0Landlord" style="display:none">地主</span>
+        </div>
+        <div class="played-cards" id="player0Played"></div>
+        <div class="pass-tag" id="player0Pass" style="display:none">不要</div>
+      </div>
+    </div>
+    <!-- 我的手牌 -->
+    <div class="my-hand-area">
+      <div id="myHand" class="my-hand"></div>
+      <div class="action-buttons">
+        <button id="playBtn" class="btn-primary">出牌</button>
+        <button id="passBtn" class="btn-secondary">不要</button>
+        <button id="hintBtn" class="btn-secondary">提示</button>
+      </div>
+    </div>
+    <!-- 记牌器 -->
+    <div id="cardCounter" class="card-counter" style="display:none">
+      <h4>记牌器</h4>
+      <div id="counterList"></div>
+    </div>
+  </div>
+
+  <!-- 管理后台 -->
+  <div id="adminView" class="view">
+    <header class="top-bar">
+      <button id="backFromAdmin" class="icon-btn">← 返回大厅</button>
+      <span class="logo-small">⚙️ 管理后台</span>
+    </header>
+    <div class="admin-content">
+      <div class="admin-section">
+        <h2>用户管理</h2>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>用户名</th><th>昵称</th><th>记牌器</th><th>音效</th><th>音乐</th><th>管理员</th><th>胜/负</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersBody"></tbody>
+        </table>
+      </div>
+      <div class="admin-section">
+        <h2>全局设置</h2>
+        <div class="settings-grid">
+          <label class="setting-item">
+            <input type="checkbox" id="setGlobalSound"> 全局音效开关
+          </label>
+          <label class="setting-item">
+            <input type="checkbox" id="setGlobalMusic"> 全局音乐开关
+          </label>
+          <label class="setting-item">
+            <input type="checkbox" id="setGlobalCounter"> 全局记牌器开关
+          </label>
+          <label class="setting-item">
+            音效音量 <input type="range" id="setSoundVolume" min="0" max="1" step="0.1">
+          </label>
+          <label class="setting-item">
+            音乐音量 <input type="range" id="setMusicVolume" min="0" max="1" step="0.1">
+          </label>
+          <button id="saveSettingsBtn" class="btn-primary">保存设置</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/sound.js?v=1.0.1"></script>
+  <script src="/js/app.js?v=1.0.1"></script>
+  <script src="/js/game.js?v=1.0.1"></script>
+  <script src="/js/admin.js?v=1.0.1"></script>
+</body>
+</html>

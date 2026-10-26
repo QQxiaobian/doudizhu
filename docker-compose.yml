@@ -1,0 +1,15 @@
+services:
+  doudizhu:
+    build: .
+    container_name: doudizhu-online
+    ports:
+      - "3000:3000"
+    volumes:
+      - doudizhu-data:/app/data
+    environment:
+      - PORT=3000
+      - JWT_SECRET=change-this-secret-in-production
+    restart: unless-stopped
+
+volumes:
+  doudizhu-data:

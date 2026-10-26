@@ -1,0 +1,17 @@
+{
+  "name": "doudizhu-online",
+  "version": "1.0.0",
+  "description": "在线斗地主 - 支持好友联机、人机、记牌器、账号系统与管理员后台",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "socket.io": "^4.7.5"
+  }
+}
