@@ -13,6 +13,11 @@ async function loadUsers() {
         <td>${u.id}</td>
         <td>${u.username}</td>
         <td>${u.nickname || ''}</td>
+        <td>🫘 ${u.beans}</td>
+        <td>
+          <input type="number" class="recharge-input" data-recharge-id="${u.id}" placeholder="数量" min="1">
+          <button class="recharge-btn" data-recharge="${u.id}">充值</button>
+        </td>
         <td><input type="checkbox" ${u.card_counter_enabled ? 'checked' : ''} data-id="${u.id}" data-field="card_counter_enabled"></td>
         <td><input type="checkbox" ${u.sound_enabled ? 'checked' : ''} data-id="${u.id}" data-field="sound_enabled"></td>
         <td><input type="checkbox" ${u.music_enabled ? 'checked' : ''} data-id="${u.id}" data-field="music_enabled"></td>
@@ -44,6 +49,24 @@ async function loadUsers() {
         if (!confirm('确定删除该用户？')) return;
         try {
           await api(`/admin/users/${id}`, { method: 'DELETE' });
+          loadUsers();
+        } catch (e) { alert(e.message); }
+      });
+    });
+
+    // 充值按钮
+    tbody.querySelectorAll('[data-recharge]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = parseInt(btn.dataset.recharge);
+        const input = document.querySelector(`[data-recharge-id="${id}"]`);
+        const amount = parseInt(input.value);
+        if (!amount || amount <= 0) return alert('请输入有效的充值数量');
+        try {
+          const res = await api(`/admin/users/${id}/recharge`, {
+            method: 'POST',
+            body: JSON.stringify({ amount })
+          });
+          alert(`充值成功，当前欢乐豆：${res.beans}`);
           loadUsers();
         } catch (e) { alert(e.message); }
       });

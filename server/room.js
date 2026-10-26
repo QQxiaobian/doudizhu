@@ -8,9 +8,9 @@ function createRoom(owner, options = {}) {
   const roomId = Math.random().toString(36).slice(2, 8).toUpperCase();
   const room = {
     id: roomId,
-    mode: options.mode || 'friend', // friend | ai
+    mode: options.mode || 'mixed', // mixed | ai | friend
     ownerId: owner.id,
-    players: [], // { id, username, nickname, isAI, seat, hand, isLandlord }
+    players: [], // { id, username, nickname, isAI, seat, hand, isLandlord, beans }
     maxPlayers: 3,
     state: 'waiting', // waiting | bidding | playing | ended
     deck: [],
@@ -25,6 +25,7 @@ function createRoom(owner, options = {}) {
     bidHistory: [],
     winner: null,
     multiplier: 1,
+    baseBet: 100, // 每局基础欢乐豆
     createdAt: Date.now()
   };
   rooms.set(roomId, room);
@@ -42,13 +43,48 @@ function removeRoom(roomId) {
 function addPlayerToRoom(room, player) {
   if (room.players.length >= room.maxPlayers) return false;
   const seat = room.players.length;
-  const p = { ...player, seat, hand: [], isLandlord: false, isAI: player.isAI || false, ready: false };
+  const p = {
+    ...player,
+    seat,
+    hand: [],
+    isLandlord: false,
+    isAI: player.isAI || false,
+    ready: false,
+    beans: player.beans || (player.isAI ? 1000 : 0)
+  };
   room.players.push(p);
   return true;
 }
 
+// 添加AI玩家（房主手动添加）
+function addAiPlayer(room) {
+  if (room.players.length >= room.maxPlayers) return null;
+  const idx = room.players.filter(p => p.isAI).length + 1;
+  const ai = {
+    id: `ai-${Date.now()}-${idx}`,
+    username: `AI-${idx}`,
+    nickname: `AI 玩家 ${idx}`,
+    isAI: true,
+    beans: 1000
+  };
+  addPlayerToRoom(room, ai);
+  return ai;
+}
+
 function removePlayerFromRoom(room, playerId) {
   room.players = room.players.filter(p => p.id !== playerId);
+}
+
+// 踢人（仅房主）
+function kickPlayer(room, targetId, kickerId) {
+  if (room.ownerId !== kickerId) return { ok: false, error: '只有房主能踢人' };
+  if (room.state !== 'waiting') return { ok: false, error: '游戏进行中不能踢人' };
+  const target = room.players.find(p => p.id === targetId);
+  if (!target) return { ok: false, error: '玩家不存在' };
+  if (target.isAI) return { ok: false, error: 'AI 玩家请用移除AI功能' };
+  if (target.id === kickerId) return { ok: false, error: '不能踢自己' };
+  removePlayerFromRoom(room, targetId);
+  return { ok: true };
 }
 
 // 开始游戏：发牌
@@ -239,6 +275,6 @@ function aiDecidePlay(room, seat) {
 }
 
 module.exports = {
-  createRoom, getRoom, removeRoom, addPlayerToRoom, removePlayerFromRoom,
+  createRoom, getRoom, removeRoom, addPlayerToRoom, addAiPlayer, removePlayerFromRoom, kickPlayer,
   startGame, handleBid, handlePlay, handlePass, aiBid, aiDecidePlay, rooms
 };

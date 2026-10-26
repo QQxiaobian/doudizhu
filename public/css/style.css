@@ -180,12 +180,89 @@ body {
   background: rgba(0,0,0,0.75); padding: 12px; border-radius: 10px;
   font-size: 12px; z-index: 100;
 }
-.card-counter h4 { color: #ffd700; margin-bottom: 8px; }
+/* 记牌器 - 左下角，不挡出牌 */
+.card-counter {
+  position: fixed; bottom: 200px; left: 16px; width: 130px;
+  background: rgba(0,0,0,0.8); padding: 10px; border-radius: 10px;
+  font-size: 12px; z-index: 100; max-height: 300px; overflow-y: auto;
+}
+.card-counter h4 { color: #ffd700; margin-bottom: 6px; font-size: 13px; }
 .counter-row {
-  display: flex; justify-content: space-between; padding: 2px 4px;
+  display: flex; justify-content: space-between; padding: 1px 4px;
   border-bottom: 1px solid #333;
 }
 .counter-row.out { color: #555; text-decoration: line-through; }
+
+/* 欢乐豆显示 */
+.beans-display {
+  background: rgba(255,215,0,0.15); padding: 4px 10px; border-radius: 12px;
+  color: #ffd700; font-weight: bold;
+}
+.player-beans { color: #ffd700; font-size: 13px; margin-left: 6px; }
+
+/* 在线玩家 & 房间列表 */
+.lobby-sections {
+  max-width: 900px; margin: 20px auto; padding: 0 20px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+.lobby-section {
+  background: rgba(0,0,0,0.4); padding: 16px; border-radius: 12px;
+}
+.lobby-section h3 { color: #ffd700; margin-bottom: 12px; }
+.online-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.online-chip {
+  padding: 6px 12px; background: rgba(46,125,50,0.3); border-radius: 14px;
+  border: 1px solid #4caf50; font-size: 13px;
+}
+.room-list { display: flex; flex-direction: column; gap: 8px; }
+.room-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; background: rgba(255,255,255,0.05); border-radius: 8px;
+}
+.room-item .room-info { font-size: 14px; }
+.room-item .room-info .room-id { color: #ffd700; font-weight: bold; }
+.room-item .join-btn {
+  padding: 6px 14px; background: #2e7d32; color: white; border: none;
+  border-radius: 6px; cursor: pointer; font-size: 13px;
+}
+.room-item .join-btn:disabled { background: #555; cursor: not-allowed; }
+
+/* 房间等待面板 */
+.room-actions { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+.player-chip {
+  position: relative; padding: 10px 20px; background: rgba(46,125,50,0.3);
+  border-radius: 20px; border: 1px solid #4caf50;
+}
+.player-chip .kick-player-btn {
+  position: absolute; top: -8px; right: -8px; width: 22px; height: 22px;
+  border-radius: 50%; background: #c62828; color: white; border: none;
+  cursor: pointer; font-size: 12px; line-height: 1;
+}
+
+/* 踢人按钮 */
+.kick-btn {
+  background: transparent; border: none; color: #ff5252; cursor: pointer;
+  font-size: 16px; margin-left: 6px;
+}
+
+/* 游戏结束欢乐豆结算 */
+.game-end-beans { margin: 16px 0; }
+.beans-row {
+  display: flex; justify-content: space-between; padding: 6px 16px;
+  background: rgba(255,255,255,0.05); border-radius: 6px; margin: 4px 0;
+}
+.beans-row .delta.plus { color: #4caf50; }
+.beans-row .delta.minus { color: #ff5252; }
+
+/* 管理后台充值 */
+.recharge-input {
+  width: 70px; padding: 4px; border-radius: 4px; border: 1px solid #555;
+  background: rgba(255,255,255,0.1); color: white; text-align: center;
+}
+.recharge-btn {
+  padding: 4px 10px; font-size: 12px; background: #ff9800; color: white;
+  border: none; border-radius: 4px; cursor: pointer;
+}
 
 /* ============ 管理后台 ============ */
 .admin-content { max-width: 1100px; margin: 20px auto; padding: 0 20px; }

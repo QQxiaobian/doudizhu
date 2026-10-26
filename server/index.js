@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
-const routes = require('./routes');
+const { router: routes } = require('./routes');
 const { initSockets } = require('./sockets');
 
 const app = express();

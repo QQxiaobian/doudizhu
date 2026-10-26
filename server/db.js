@@ -18,6 +18,7 @@ db.exec(`
     card_counter_enabled INTEGER DEFAULT 1,
     sound_enabled INTEGER DEFAULT 1,
     music_enabled INTEGER DEFAULT 1,
+    beans INTEGER DEFAULT 1000,
     wins INTEGER DEFAULT 0,
     losses INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
@@ -28,6 +29,13 @@ db.exec(`
     value TEXT
   );
 `);
+
+// 兼容旧库：补充 beans 字段
+const cols = db.prepare("PRAGMA table_info(users)").all();
+if (!cols.find(c => c.name === 'beans')) {
+  db.exec('ALTER TABLE users ADD COLUMN beans INTEGER DEFAULT 1000');
+  db.prepare('UPDATE users SET beans = 1000 WHERE beans IS NULL').run();
+}
 
 // 默认管理员账号 admin / admin123
 const bcrypt = require('bcryptjs');

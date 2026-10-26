@@ -137,6 +137,8 @@ function renderGameState(state) {
     if (lordEl) lordEl.style.display = p.isLandlord ? 'inline-block' : 'none';
     const countEl = document.getElementById(`player${i}Count`);
     if (countEl) countEl.textContent = p.handCount + '张';
+    const beansEl = document.getElementById(`player${i}Beans`);
+    if (beansEl) beansEl.textContent = '🫘' + (p.beans || 0);
   }
 
   // 我的手牌
@@ -257,7 +259,14 @@ function setupGameSocket() {
     const myWon = me && ((me.isLandlord && data.winner === 'landlord') || (!me.isLandlord && data.winner === 'farmer'));
     document.getElementById('gameEndTitle').textContent = myWon ? '🎉 你赢了！' : '😢 你输了';
     document.getElementById('gameEndDesc').textContent =
-      (data.winner === 'landlord' ? '地主胜' : '农民胜') + `，倍数：${data.multiplier}`;
+      (data.winner === 'landlord' ? '地主胜' : '农民胜') + `，倍数：${data.multiplier}，底注：${data.baseBet}`;
+    // 欢乐豆结算
+    const beansEl = document.getElementById('gameEndBeans');
+    beansEl.innerHTML = data.players.map(p => {
+      const delta = p.delta || 0;
+      const cls = delta >= 0 ? 'plus' : 'minus';
+      return `<div class="beans-row"><span>${p.nickname}${p.isLandlord ? '（地主）' : ''}</span><span class="delta ${cls}">${delta >= 0 ? '+' : ''}${delta} 🫘</span></div>`;
+    }).join('');
     if (myWon) SoundManager.win(); else SoundManager.lose();
   });
 }

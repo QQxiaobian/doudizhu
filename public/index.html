@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>在线斗地主</title>
-  <link rel="stylesheet" href="/css/style.css?v=1.0.1">
+  <link rel="stylesheet" href="/css/style.css?v=1.1.0">
 </head>
 <body>
   <!-- 登录/注册页 -->
@@ -37,6 +37,7 @@
       <span class="logo-small">🃏 斗地主</span>
       <div class="user-info">
         <span id="userNickname"></span>
+        <span class="beans-display">🫘 <span id="userBeans">0</span></span>
         <span class="stats" id="userStats"></span>
         <button id="toggleSound" class="icon-btn" title="音效">🔊</button>
         <button id="toggleMusic" class="icon-btn" title="音乐">🎵</button>
@@ -48,26 +49,42 @@
     <div class="lobby-content">
       <div class="lobby-card" id="createAiRoom">
         <h2>🤖 人机对战</h2>
-        <p>与两个 AI 玩家对战，练习牌技</p>
+        <p>立即与两个 AI 开局</p>
         <button class="btn-primary">开始人机对战</button>
       </div>
-      <div class="lobby-card" id="createFriendRoom">
-        <h2>👥 好友联机</h2>
-        <p>创建房间，邀请好友加入</p>
-        <button class="btn-primary">创建好友房间</button>
+      <div class="lobby-card" id="createMixedRoom">
+        <h2>🏠 创建房间</h2>
+        <p>可添加人机，也可等真人加入</p>
+        <button class="btn-primary">创建房间</button>
       </div>
       <div class="lobby-card" id="joinFriendRoom">
-        <h2>🚪 加入房间</h2>
+        <h2>🚪 输入房号加入</h2>
         <p>输入好友分享的房间号</p>
         <input type="text" id="joinRoomId" placeholder="房间号" maxlength="6">
         <button class="btn-primary">加入房间</button>
       </div>
     </div>
+
+    <div class="lobby-sections">
+      <div class="lobby-section">
+        <h3>🟢 在线玩家（<span id="onlineCount">0</span>）</h3>
+        <div id="onlinePlayersList" class="online-list"></div>
+      </div>
+      <div class="lobby-section">
+        <h3>🏠 游戏房间</h3>
+        <div id="roomList" class="room-list"></div>
+      </div>
+    </div>
+
     <div id="roomWaitPanel" class="room-wait" style="display:none">
       <h2>房间号：<span id="roomIdDisplay"></span></h2>
-      <p class="hint">将房间号分享给好友即可一起游戏</p>
+      <p class="hint">底注 <span id="roomBaseBet">100</span> 欢乐豆 · 将房间号分享给好友</p>
       <div id="roomPlayersList" class="players-list"></div>
-      <button id="leaveRoomBtn" class="btn-secondary">离开房间</button>
+      <div class="room-actions">
+        <button id="addAiBtn" class="btn-secondary">➕ 添加人机</button>
+        <button id="startGameBtn" class="btn-primary">▶ 开始游戏</button>
+        <button id="leaveRoomBtn" class="btn-secondary">离开房间</button>
+      </div>
     </div>
   </div>
 
@@ -86,6 +103,7 @@
           <span class="player-name" id="player1Name">玩家2</span>
           <span class="landlord-tag" id="player1Landlord" style="display:none">地主</span>
           <span class="card-count" id="player1Count">0</span>
+          <span class="player-beans" id="player1Beans">🫘0</span>
         </div>
         <div class="played-cards" id="player1Played"></div>
         <div class="pass-tag" id="player1Pass" style="display:none">不要</div>
@@ -96,6 +114,7 @@
           <span class="player-name" id="player2Name">玩家3</span>
           <span class="landlord-tag" id="player2Landlord" style="display:none">地主</span>
           <span class="card-count" id="player2Count">0</span>
+          <span class="player-beans" id="player2Beans">🫘0</span>
         </div>
         <div class="played-cards" id="player2Played"></div>
         <div class="pass-tag" id="player2Pass" style="display:none">不要</div>
@@ -114,7 +133,8 @@
         <div id="gameEndPanel" class="game-end-panel" style="display:none">
           <h2 id="gameEndTitle">游戏结束</h2>
           <p id="gameEndDesc"></p>
-          <button id="playAgainBtn" class="btn-primary">再来一局</button>
+          <div id="gameEndBeans" class="game-end-beans"></div>
+          <button id="playAgainBtn" class="btn-primary">返回大厅</button>
         </div>
       </div>
       <!-- 底部玩家（自己，座位 0） -->
@@ -122,6 +142,8 @@
         <div class="player-info">
           <span class="player-name" id="player0Name">我</span>
           <span class="landlord-tag" id="player0Landlord" style="display:none">地主</span>
+          <span class="player-beans" id="player0Beans">🫘0</span>
+          <button id="kickBtn1" class="kick-btn" style="display:none" title="踢人">👢</button>
         </div>
         <div class="played-cards" id="player0Played"></div>
         <div class="pass-tag" id="player0Pass" style="display:none">不要</div>
@@ -155,7 +177,7 @@
         <table class="admin-table">
           <thead>
             <tr>
-              <th>ID</th><th>用户名</th><th>昵称</th><th>记牌器</th><th>音效</th><th>音乐</th><th>管理员</th><th>胜/负</th><th>操作</th>
+              <th>ID</th><th>用户名</th><th>昵称</th><th>欢乐豆</th><th>充值</th><th>记牌器</th><th>音效</th><th>音乐</th><th>管理员</th><th>胜/负</th><th>操作</th>
             </tr>
           </thead>
           <tbody id="adminUsersBody"></tbody>
@@ -186,9 +208,9 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/sound.js?v=1.0.1"></script>
-  <script src="/js/app.js?v=1.0.1"></script>
-  <script src="/js/game.js?v=1.0.1"></script>
-  <script src="/js/admin.js?v=1.0.1"></script>
+  <script src="/js/sound.js?v=1.1.0"></script>
+  <script src="/js/app.js?v=1.1.0"></script>
+  <script src="/js/game.js?v=1.1.0"></script>
+  <script src="/js/admin.js?v=1.1.0"></script>
 </body>
 </html>

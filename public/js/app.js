@@ -81,6 +81,7 @@ async function enterLobby() {
   } catch (e) {}
   document.getElementById('userNickname').textContent = App.user.nickname || App.user.username;
   document.getElementById('userStats').textContent = `胜 ${App.user.wins || 0} / 负 ${App.user.losses || 0}`;
+  document.getElementById('userBeans').textContent = App.user.beans || 0;
   document.getElementById('adminBtn').style.display = App.user.is_admin ? 'inline-block' : 'none';
 
   // 应用偏好
@@ -152,8 +153,8 @@ document.getElementById('createAiRoom').addEventListener('click', () => {
   });
 });
 
-document.getElementById('createFriendRoom').addEventListener('click', () => {
-  App.socket.emit('createRoom', { mode: 'friend' }, (res) => {
+document.getElementById('createMixedRoom').addEventListener('click', () => {
+  App.socket.emit('createRoom', { mode: 'mixed' }, (res) => {
     if (res.ok) showRoomWait(res.room);
     else alert(res.error);
   });
@@ -170,6 +171,18 @@ document.getElementById('joinFriendRoom').addEventListener('click', () => {
   });
 });
 
+document.getElementById('addAiBtn').addEventListener('click', () => {
+  App.socket.emit('addAi', (res) => {
+    if (!res.ok) alert(res.error);
+  });
+});
+
+document.getElementById('startGameBtn').addEventListener('click', () => {
+  App.socket.emit('startGame', (res) => {
+    if (!res.ok) alert(res.error);
+  });
+});
+
 document.getElementById('leaveRoomBtn').addEventListener('click', () => {
   App.socket.emit('leaveRoom');
   document.getElementById('roomWaitPanel').style.display = 'none';
@@ -178,14 +191,35 @@ document.getElementById('leaveRoomBtn').addEventListener('click', () => {
 function showRoomWait(room) {
   document.getElementById('roomWaitPanel').style.display = 'block';
   document.getElementById('roomIdDisplay').textContent = room.id;
+  document.getElementById('roomBaseBet').textContent = room.baseBet || 100;
   renderRoomPlayers(room);
 }
 
 function renderRoomPlayers(room) {
   const list = document.getElementById('roomPlayersList');
-  list.innerHTML = room.players.map(p =>
-    `<div class="player-chip">${p.nickname}${p.isAI ? ' (AI)' : ''}</div>`
-  ).join('');
+  const isOwner = room.ownerId === App.user.id;
+  list.innerHTML = room.players.map(p => {
+    let chip = `<div class="player-chip">${p.nickname}${p.isAI ? ' (AI)' : ''} 🫘${p.beans || 0}`;
+    // 房主可踢非AI玩家
+    if (isOwner && !p.isAI && p.id !== App.user.id) {
+      chip += `<button class="kick-player-btn" data-kick="${p.id}" title="踢出">×</button>`;
+    }
+    chip += '</div>';
+    return chip;
+  }).join('');
+  // 绑定踢人
+  list.querySelectorAll('[data-kick]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (confirm('确定踢出该玩家？')) {
+        App.socket.emit('kickPlayer', { targetId: btn.dataset.kick }, (res) => {
+          if (!res.ok) alert(res.error);
+        });
+      }
+    });
+  });
+  // 添加AI按钮只对房主且未满显示
+  document.getElementById('addAiBtn').style.display = (isOwner && room.players.length < 3) ? 'inline-block' : 'none';
+  document.getElementById('startGameBtn').style.display = (isOwner && room.players.length >= 3) ? 'inline-block' : 'none';
 }
 
 function enterGame(room) {
@@ -211,11 +245,59 @@ function connectSocket() {
     SoundManager.setPrefs({ sound: App.prefs.sound, music: App.prefs.music });
   });
 
+  App.socket.on('beans', (data) => {
+    document.getElementById('userBeans').textContent = data.beans;
+    if (App.user) App.user.beans = data.beans;
+  });
+
+  App.socket.on('onlineUpdate', (data) => {
+    document.getElementById('onlineCount').textContent = data.count;
+    document.getElementById('onlinePlayersList').innerHTML =
+      data.players.map(p => `<div class="online-chip">${p.nickname}</div>`).join('');
+  });
+
+  App.socket.on('roomList', (data) => {
+    const list = document.getElementById('roomList');
+    if (data.rooms.length === 0) {
+      list.innerHTML = '<p class="hint">暂无等待中的房间</p>';
+      return;
+    }
+    list.innerHTML = data.rooms.map(r => `
+      <div class="room-item">
+        <div class="room-info">
+          <span class="room-id">${r.id}</span> · ${r.ownerName}的房间 ·
+          ${r.playerCount}/${r.maxPlayers}人${r.hasAI ? ' · 含AI' : ''}
+        </div>
+        <button class="join-btn" data-join="${r.id}" ${r.playerCount >= r.maxPlayers ? 'disabled' : ''}>加入</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('[data-join]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        App.socket.emit('joinRoom', { roomId: btn.dataset.join }, (res) => {
+          if (res.ok) {
+            if (res.room.state === 'playing') enterGame(res.room);
+            else showRoomWait(res.room);
+          } else alert(res.error);
+        });
+      });
+    });
+  });
+
+  App.socket.on('kicked', () => {
+    alert('你已被房主踢出房间');
+    document.getElementById('roomWaitPanel').style.display = 'none';
+    showView('lobby');
+  });
+
   App.socket.on('roomUpdate', (room) => {
-    if (room.state === 'playing') {
+    if (room.state === 'playing' || room.state === 'bidding') {
       enterGame(room);
     } else {
-      renderRoomPlayers(room);
+      // 如果在游戏中返回等待（不太可能），否则刷新等待面板
+      const panel = document.getElementById('roomWaitPanel');
+      if (panel.style.display !== 'none' || room.players.some(p => p.id === App.user.id)) {
+        renderRoomPlayers(room);
+      }
     }
   });
 }

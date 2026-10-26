@@ -2,6 +2,10 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('./db');
 const { sign, authMiddleware, adminMiddleware } = require('./auth');
+const { rooms } = require('./room');
+
+// 在线玩家追踪（由 sockets.js 维护）
+const onlineUsers = new Map(); // userId -> { username, nickname }
 
 const router = express.Router();
 
@@ -16,9 +20,9 @@ router.post('/register', (req, res) => {
   if (exists) return res.status(400).json({ error: '用户名已存在' });
   const hash = bcrypt.hashSync(password, 10);
   const info = db.prepare(
-    'INSERT INTO users (username, password, nickname) VALUES (?, ?, ?)'
+    'INSERT INTO users (username, password, nickname, beans) VALUES (?, ?, ?, 1000)'
   ).run(username, hash, nickname || username);
-  const user = db.prepare('SELECT id, username, nickname, is_admin FROM users WHERE id = ?').get(info.lastInsertRowid);
+  const user = db.prepare('SELECT id, username, nickname, is_admin, beans FROM users WHERE id = ?').get(info.lastInsertRowid);
   const token = sign(user);
   res.json({ token, user });
 });
@@ -36,6 +40,7 @@ router.post('/login', (req, res) => {
     token,
     user: {
       id: user.id, username: user.username, nickname: user.nickname, is_admin: user.is_admin,
+      beans: user.beans,
       card_counter_enabled: user.card_counter_enabled,
       sound_enabled: user.sound_enabled, music_enabled: user.music_enabled
     }
@@ -45,7 +50,7 @@ router.post('/login', (req, res) => {
 // 获取当前用户信息
 router.get('/me', authMiddleware, (req, res) => {
   const user = db.prepare(
-    'SELECT id, username, nickname, is_admin, card_counter_enabled, sound_enabled, music_enabled, wins, losses FROM users WHERE id = ?'
+    'SELECT id, username, nickname, is_admin, card_counter_enabled, sound_enabled, music_enabled, beans, wins, losses FROM users WHERE id = ?'
   ).get(req.user.id);
   res.json({ user });
 });
@@ -64,9 +69,19 @@ router.put('/me/prefs', authMiddleware, (req, res) => {
 // 用户列表
 router.get('/admin/users', authMiddleware, adminMiddleware, (req, res) => {
   const users = db.prepare(
-    'SELECT id, username, nickname, is_admin, card_counter_enabled, sound_enabled, music_enabled, wins, losses, created_at FROM users ORDER BY id'
+    'SELECT id, username, nickname, is_admin, card_counter_enabled, sound_enabled, music_enabled, beans, wins, losses, created_at FROM users ORDER BY id'
   ).all();
   res.json({ users });
+});
+
+// 管理员充值欢乐豆
+router.post('/admin/users/:id/recharge', authMiddleware, adminMiddleware, (req, res) => {
+  const id = parseInt(req.params.id);
+  const amount = parseInt(req.body.amount);
+  if (!amount || amount <= 0) return res.status(400).json({ error: '充值数量必须大于0' });
+  db.prepare('UPDATE users SET beans = beans + ? WHERE id = ?').run(amount, id);
+  const u = db.prepare('SELECT beans FROM users WHERE id = ?').get(id);
+  res.json({ ok: true, beans: u.beans });
 });
 
 // 更新用户（管理员设置记牌器、声音等）
@@ -126,4 +141,27 @@ router.get('/settings/public', (req, res) => {
   res.json({ settings });
 });
 
-module.exports = router;
+// 在线玩家列表
+router.get('/online', authMiddleware, (req, res) => {
+  const list = Array.from(onlineUsers.values());
+  res.json({ count: list.length, players: list });
+});
+
+// 房间列表（等待中的公开房间）
+router.get('/rooms', authMiddleware, (req, res) => {
+  const list = [];
+  for (const room of rooms.values()) {
+    if (room.state === 'waiting') {
+      list.push({
+        id: room.id,
+        ownerName: room.players.find(p => p.id === room.ownerId)?.nickname || '未知',
+        playerCount: room.players.length,
+        maxPlayers: room.maxPlayers,
+        hasAI: room.players.some(p => p.isAI)
+      });
+    }
+  }
+  res.json({ rooms: list });
+});
+
+module.exports = { router, onlineUsers };
