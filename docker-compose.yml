@@ -1,6 +1,8 @@
 services:
   doudizhu:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: doudizhu-online:latest
     container_name: doudizhu-online
     ports:
