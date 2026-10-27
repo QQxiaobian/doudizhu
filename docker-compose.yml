@@ -1,6 +1,7 @@
 services:
   doudizhu:
     build: .
+    image: doudizhu-online:latest
     container_name: doudizhu-online
     ports:
       - "3000:3000"
@@ -8,8 +9,16 @@ services:
       - doudizhu-data:/app/data
     environment:
       - PORT=3000
-      - JWT_SECRET=change-this-secret-in-production
+      - NODE_ENV=production
+      # 生产环境请修改此密钥，或通过 .env 文件注入 JWT_SECRET
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-in-production}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   doudizhu-data:

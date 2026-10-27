@@ -12,6 +12,11 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(express.json());
 app.use('/api', routes);
 
+// 健康检查（供 Docker / 负载均衡探测）
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
+
 // 静态文件
 app.use(express.static(path.join(__dirname, '..', 'public')));
 

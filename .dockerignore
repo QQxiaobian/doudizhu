@@ -1,4 +1,13 @@
 node_modules/
 data/
+.git/
+.github/
 *.log
+*.md
 .DS_Store
+.env
+.env.*
+docker-compose.yml
+Dockerfile
+.dockerignore
+.gitignore
