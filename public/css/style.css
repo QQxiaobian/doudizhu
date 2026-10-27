@@ -5,10 +5,12 @@ body {
   background: linear-gradient(135deg, #1a3a1a 0%, #0d2818 100%);
   color: #f0f0f0;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.view { display: none; min-height: 100vh; }
+.view { display: none; min-height: 100vh; min-height: 100dvh; }
 .view.active { display: block; }
 
 /* ============ 认证页 ============ */
@@ -310,3 +312,211 @@ body {
 .setting-item { display: flex; align-items: center; gap: 10px; }
 .setting-item input[type="checkbox"] { width: 18px; height: 18px; }
 .setting-item input[type="range"] { flex: 1; }
+
+/* ============================================================
+   移动端适配
+   ============================================================ */
+
+/* ---- 通用移动端（宽度 <= 768px） ---- */
+@media (max-width: 768px) {
+  /* 认证页 */
+  .auth-container { margin: 20px auto; padding: 24px 20px; }
+  .logo { font-size: 26px; margin-bottom: 20px; }
+
+  /* 顶部栏 */
+  .top-bar { padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+  .logo-small { font-size: 16px; }
+  .user-info { gap: 6px; flex-wrap: wrap; }
+  .user-info span { font-size: 13px; }
+  .stats { font-size: 11px; }
+  .icon-btn { padding: 6px 8px; font-size: 14px; }
+  .beans-display { padding: 3px 8px; font-size: 12px; }
+
+  /* 大厅 */
+  .lobby-content { margin: 16px auto; padding: 0 12px; gap: 12px; }
+  .lobby-card { padding: 20px; }
+  .lobby-card h2 { font-size: 18px; }
+  .lobby-sections { grid-template-columns: 1fr; margin: 12px auto; padding: 0 12px; gap: 12px; }
+  .lobby-section { padding: 12px; }
+  .lobby-section h3 { font-size: 16px; }
+
+  /* 房间等待覆盖层 */
+  .room-wait-box { padding: 20px 16px; width: 94%; }
+  .room-wait-box h2 { font-size: 20px; }
+  .room-seats { gap: 10px; margin: 16px 0; }
+  .seat-slot { width: 100%; max-width: 280px; min-height: 80px; padding: 12px; }
+  .seat-slot .seat-name { font-size: 14px; }
+  .seat-slot .seat-beans { font-size: 12px; }
+
+  /* 游戏顶栏 */
+  .game-top-bar { padding: 6px 10px; gap: 10px; }
+  .game-info { font-size: 13px; }
+
+  /* 管理后台 */
+  .admin-content { padding: 0 10px; margin: 12px auto; }
+  .admin-section { padding: 14px; }
+  .admin-table { font-size: 12px; display: block; overflow-x: auto; white-space: nowrap; }
+  .admin-table th, .admin-table td { padding: 6px 8px; }
+}
+
+/* ---- 手机竖屏（窄屏 + 高屏） ---- */
+@media (max-width: 480px) and (orientation: portrait) {
+  /* 游戏区域高度自适应 */
+  .game-board {
+    height: calc(100dvh - 180px);
+    min-height: 360px;
+    padding: 8px;
+  }
+
+  /* 玩家区域位置调整 */
+  .player-area.top { top: 4px; }
+  .player-area.left { top: 30%; left: 4px; }
+  .player-area.bottom { bottom: 4px; }
+
+  .player-name { font-size: 12px; }
+  .card-count { font-size: 12px; margin-left: 4px; }
+  .player-beans { font-size: 11px; margin-left: 4px; }
+  .landlord-tag { font-size: 10px; padding: 1px 6px; margin-left: 4px; }
+
+  /* 出牌区缩小 */
+  .played-cards { min-height: 60px; gap: 1px; overflow-x: auto; flex-wrap: nowrap; }
+
+  /* 中央信息 */
+  .center-info { top: 42%; }
+  .bidding-panel { padding: 12px; }
+  .bidding-panel p { font-size: 13px; }
+  .bid-buttons { gap: 6px; }
+  .bid-buttons .btn-primary { padding: 8px 14px; font-size: 13px; }
+
+  /* 卡牌缩小 */
+  .card {
+    width: 34px; height: 49px; font-size: 13px; border-radius: 4px;
+  }
+  .card .suit { font-size: 11px; }
+  .card.joker { font-size: 9px; }
+
+  /* 其他人的牌背面 */
+  .card-back { width: 26px; height: 38px; font-size: 14px; border-width: 1px; }
+
+  /* 手牌区域 */
+  .my-hand-area { padding: 6px 8px 10px; gap: 6px; }
+  .my-hand { min-height: 56px; padding: 0 8px; overflow: hidden; }
+  .my-hand .card { margin-left: -20px; }
+  .my-hand .card.selected { transform: translateY(-14px); }
+  .action-buttons { gap: 8px; }
+  .action-buttons .btn-primary, .action-buttons .btn-secondary {
+    padding: 8px 14px; font-size: 13px;
+  }
+
+  /* 记牌器移到右上角，避免遮挡手牌和左侧玩家 */
+  .card-counter {
+    top: 50px; right: 6px; bottom: auto; left: auto;
+    width: 96px; padding: 6px; font-size: 10px; max-height: 180px;
+  }
+  .card-counter h4 { font-size: 11px; margin-bottom: 4px; }
+
+  /* 底牌 */
+  .bottom-cards-list { gap: 2px; }
+  .bottom-cards-list .card { width: 28px; height: 40px; font-size: 11px; }
+
+  /* 游戏结束面板 */
+  .game-end-panel { padding: 20px 24px; }
+  .game-end-panel h2 { font-size: 22px; }
+  .game-end-beans { margin: 10px 0; }
+  .beans-row { padding: 4px 10px; font-size: 13px; }
+
+  /* 不要标签 */
+  .pass-tag { font-size: 16px; margin-top: 4px; }
+}
+
+/* ---- 手机横屏（宽屏 + 矮屏） ---- */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* 游戏区域高度 */
+  .game-board {
+    height: calc(100dvh - 100px);
+    min-height: 280px;
+    padding: 6px 20px;
+  }
+
+  /* 玩家区域：顶部玩家在上方，左侧玩家在左中，底部玩家紧贴底部 */
+  .player-area.top { top: 0; }
+  .player-area.left { top: 35%; left: 10px; }
+  .player-area.bottom { bottom: 0; }
+
+  .player-name { font-size: 12px; }
+  .card-count { font-size: 11px; }
+  .player-beans { font-size: 11px; }
+  .landlord-tag { font-size: 10px; padding: 1px 5px; }
+
+  /* 出牌区 */
+  .played-cards { min-height: 50px; gap: 1px; overflow-x: auto; flex-wrap: nowrap; }
+
+  /* 中央信息上移 */
+  .center-info { top: 40%; }
+  .bidding-panel { padding: 10px 16px; }
+  .bidding-panel p { font-size: 12px; margin: 0; }
+  .bid-buttons { margin-top: 8px; gap: 6px; }
+  .bid-buttons .btn-primary { padding: 6px 12px; font-size: 12px; }
+
+  /* 卡牌缩小 */
+  .card {
+    width: 32px; height: 46px; font-size: 12px; border-radius: 4px;
+  }
+  .card .suit { font-size: 10px; }
+  .card.joker { font-size: 8px; }
+
+  .card-back { width: 24px; height: 35px; font-size: 12px; border-width: 1px; }
+
+  /* 手牌区域紧凑 */
+  .my-hand-area { padding: 4px 16px 6px; gap: 4px; }
+  .my-hand { min-height: 50px; padding: 0 20px; }
+  .my-hand .card { margin-left: -22px; }
+  .my-hand .card.selected { transform: translateY(-12px); }
+  .action-buttons { gap: 6px; }
+  .action-buttons .btn-primary, .action-buttons .btn-secondary {
+    padding: 5px 12px; font-size: 12px;
+  }
+
+  /* 记牌器移到右侧中间，缩小 */
+  .card-counter {
+    top: 50%; right: 6px; bottom: auto; left: auto; transform: translateY(-50%);
+    width: 90px; padding: 6px; font-size: 10px; max-height: 160px;
+  }
+  .card-counter h4 { font-size: 11px; margin-bottom: 4px; }
+
+  /* 底牌 */
+  .bottom-cards-list .card { width: 26px; height: 38px; font-size: 10px; }
+
+  /* 游戏结束面板 */
+  .game-end-panel { padding: 14px 30px; }
+  .game-end-panel h2 { font-size: 20px; margin-bottom: 6px; }
+  .game-end-beans { margin: 8px 0; }
+  .beans-row { padding: 3px 12px; font-size: 12px; }
+
+  /* 不要标签 */
+  .pass-tag { font-size: 15px; margin-top: 2px; }
+
+  /* 游戏顶栏紧凑 */
+  .game-top-bar { padding: 4px 12px; gap: 12px; }
+  .game-info { font-size: 12px; }
+  .game-top-bar .icon-btn { padding: 4px 8px; font-size: 13px; }
+}
+
+/* ---- 小屏手机竖屏（<= 380px） ---- */
+@media (max-width: 380px) and (orientation: portrait) {
+  .card { width: 30px; height: 43px; font-size: 12px; }
+  .card .suit { font-size: 10px; }
+  .my-hand .card { margin-left: -22px; }
+  .seat-slot { min-height: 70px; padding: 10px; }
+  .seat-slot .seat-name { font-size: 13px; }
+}
+
+/* ---- 安全区域适配（刘海屏） ---- */
+@supports (padding: env(safe-area-inset-top)) {
+  .top-bar, .game-top-bar {
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+  .my-hand-area {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+}

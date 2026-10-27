@@ -19,6 +19,13 @@ function initGameView(room) {
   // 等待 gameState 事件填充
 }
 
+// 窗口尺寸变化时重新布局手牌
+window.addEventListener('resize', () => {
+  if (document.getElementById('gameView').classList.contains('active')) {
+    layoutHandCards();
+  }
+});
+
 function bindGameEvents() {
   document.getElementById('playBtn').onclick = playSelected;
   document.getElementById('passBtn').onclick = () => {
@@ -67,6 +74,37 @@ function renderMyHand(hand) {
     if (selectedCards.has(card.id)) el.classList.add('selected');
     container.appendChild(el);
   }
+  layoutHandCards();
+}
+
+// 根据屏幕宽度和手牌数量动态调整卡牌大小和重叠
+function layoutHandCards() {
+  const container = document.getElementById('myHand');
+  if (!container) return;
+  const cards = container.querySelectorAll('.card');
+  const count = cards.length;
+  if (count === 0) return;
+
+  const viewportW = window.innerWidth;
+  // 直接使用容器实际可用宽度，避免与 CSS padding 不一致
+  const availableW = container.clientWidth || (viewportW - 40);
+
+  // 卡牌宽度 = 可用宽度 / (1 + (N-1) * 0.42)，重叠约58%
+  const overlapRatio = 0.58;
+  let cardW = availableW / (1 + (count - 1) * (1 - overlapRatio));
+  // 限制最大最小宽度
+  const maxCardW = viewportW < 500 ? 40 : 56;
+  cardW = Math.max(24, Math.min(cardW, maxCardW));
+  const cardH = Math.round(cardW * 1.45);
+  const overlap = Math.round(cardW * overlapRatio);
+  const fontSize = Math.max(9, Math.round(cardW * 0.38));
+
+  cards.forEach((card, i) => {
+    card.style.width = cardW + 'px';
+    card.style.height = cardH + 'px';
+    card.style.fontSize = fontSize + 'px';
+    card.style.marginLeft = i === 0 ? '0' : (-overlap) + 'px';
+  });
 }
 
 function toggleSelect(cardId) {
@@ -150,7 +188,6 @@ function renderGameState(state) {
   if (state.bottomCards && state.bottomCards.length > 0) {
     for (const c of state.bottomCards) {
       const el = renderCard(c);
-      el.style.width = '36px'; el.style.height = '52px'; el.style.fontSize = '12px';
       bottomEl.appendChild(el);
     }
   }
