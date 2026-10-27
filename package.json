@@ -8,6 +8,9 @@
     "dev": "node server/index.js"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.3.0",
     "express": "^4.19.2",

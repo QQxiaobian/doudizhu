@@ -1,0 +1,35 @@
+// 全局仓库镜像配置（解决 Maven Central 429 限流）
+allprojects {
+    buildscript {
+        repositories {
+            all { ArtifactRepository repo ->
+                if (repo instanceof MavenArtifactRepository) {
+                    def url = repo.url.toString()
+                    if (url.contains('repo.maven.apache.org/maven2') || url.contains('mavenCentral')) {
+                        remove repo
+                    }
+                    if (url.contains('dl.google.com/dl/android/maven2') || url.contains('google()')) {
+                        // google() 仓库也通过阿里云镜像
+                    }
+                }
+            }
+            maven { url 'https://maven.aliyun.com/repository/google' }
+            maven { url 'https://maven.aliyun.com/repository/public' }
+            maven { url 'https://maven.aliyun.com/repository/central' }
+            maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        }
+    }
+    repositories {
+        all { ArtifactRepository repo ->
+            if (repo instanceof MavenArtifactRepository) {
+                def url = repo.url.toString()
+                if (url.contains('repo.maven.apache.org/maven2')) {
+                    remove repo
+                }
+            }
+        }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
+    }
+}

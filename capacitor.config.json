@@ -1,0 +1,12 @@
+{
+  "appId": "com.doudizhu.online",
+  "appName": "在线斗地主",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

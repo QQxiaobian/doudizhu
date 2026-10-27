@@ -52,6 +52,33 @@ npm start
 # 访问 http://localhost:3000
 ```
 
+## 安卓 APP
+
+本项目使用 [Capacitor](https://capacitorjs.com/) 将网页游戏打包为安卓 APP。APP 本身不包含服务端，需要连接你自己部署的斗地主服务器。
+
+### 1. 部署服务端
+
+先按上面的「Docker 部署」或「本地运行」启动服务端，记下服务器地址（如 `http://192.168.1.100:3000`）。
+
+### 2. 构建 APK
+
+```bash
+npm install @capacitor/core @capacitor/cli @capacitor/android
+npx cap add android
+npx cap sync android
+cd android && ./gradlew assembleDebug
+```
+
+APK 产物路径：`android/app/build/outputs/apk/debug/app-debug.apk`
+
+### 3. 使用 APP
+
+1. 安装 APK 到安卓手机
+2. 首次打开会弹出「服务器设置」，输入你的服务器地址（如 `http://192.168.1.100:3000`）
+3. 保存后即可登录游戏
+
+> 注意：手机和服务器需在同一局域网，或服务器有公网 IP。服务器地址需以 `http://` 或 `https://` 开头。
+
 ## 项目结构
 
 ```

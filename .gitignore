@@ -3,3 +3,17 @@ data/
 *.log
 .DS_Store
 npm-debug.log*
+
+# Android build artifacts
+android/app/build/
+android/.gradle/
+android/build/
+android/local.properties
+android/captures/
+*.apk
+*.aab
+android/app/release/
+
+# Capacitor
+android/app/src/main/assets/public/
+

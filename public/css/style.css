@@ -520,3 +520,23 @@ body {
     padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
 }
+
+/* ============ APP 服务器配置 ============ */
+.server-config-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.server-config-box {
+  max-width: 360px; width: 90%; padding: 28px 24px;
+  background: linear-gradient(160deg, #1b5e20, #2e7d32);
+  border-radius: 16px; text-align: center;
+}
+.server-config-box h2 { color: #ffd700; margin-bottom: 8px; font-size: 22px; }
+.server-config-box input {
+  width: 100%; padding: 12px 16px; margin: 16px 0;
+  border-radius: 8px; border: 1px solid #4caf50;
+  background: rgba(255,255,255,0.1); color: white; font-size: 15px;
+  text-align: center;
+}
+.server-config-box input:focus { outline: none; border-color: #ffd700; }
+.server-config-box .btn-primary { width: 100%; }

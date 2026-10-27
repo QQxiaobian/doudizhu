@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>在线斗地主</title>
-  <link rel="stylesheet" href="/css/style.css?v=1.4.0">
+  <link rel="stylesheet" href="/css/style.css?v=1.5.0">
 </head>
 <body>
   <!-- 登录/注册页 -->
@@ -208,10 +208,21 @@
     </div>
   </div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/sound.js?v=1.4.0"></script>
-  <script src="/js/app.js?v=1.4.0"></script>
-  <script src="/js/game.js?v=1.4.0"></script>
-  <script src="/js/admin.js?v=1.4.0"></script>
+  <!-- 服务器配置（APP 首次使用） -->
+  <div id="serverConfigOverlay" class="server-config-overlay" style="display:none">
+    <div class="server-config-box">
+      <h2>⚙️ 服务器设置</h2>
+      <p class="hint">请输入你的斗地主服务器地址</p>
+      <input type="text" id="serverUrlInput" placeholder="例如：http://192.168.1.100:3000" />
+      <button class="btn-primary" onclick="saveServerConfig()">保存并连接</button>
+      <p class="hint" style="margin-top:12px;font-size:11px">需要先在电脑/服务器上部署斗地主服务端，然后填入地址</p>
+    </div>
+  </div>
+
+  <script src="/js/socket.io.min.js?v=1.5.0"></script>
+  <script src="/js/sound.js?v=1.5.0"></script>
+  <script src="/js/app.js?v=1.5.0"></script>
+  <script src="/js/game.js?v=1.5.0"></script>
+  <script src="/js/admin.js?v=1.5.0"></script>
 </body>
 </html>

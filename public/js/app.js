@@ -3,12 +3,25 @@ const App = {
   token: localStorage.getItem('token'),
   user: null,
   socket: null,
-  prefs: { card_counter: true, sound: true, music: true }
+  prefs: { card_counter: true, sound: true, music: true },
+  serverUrl: localStorage.getItem('serverUrl') || ''
 };
+
+// 获取服务器地址基础 URL（用于 API 和 Socket）
+function getBaseUrl() {
+  // 如果配置了服务器地址，用配置的；否则用当前页面地址（Web 访问时）
+  if (App.serverUrl) return App.serverUrl.replace(/\/$/, '');
+  // 检测是否在 APP 中运行（file:// 或 capacitor://）
+  if (location.protocol === 'file:' || location.protocol === 'capacitor:' || location.protocol === 'http:' && location.hostname === 'localhost') {
+    return '';
+  }
+  return location.origin;
+}
 
 // ============ 工具函数 ============
 async function api(path, options = {}) {
-  const res = await fetch('/api' + path, {
+  const base = getBaseUrl();
+  const res = await fetch(base + '/api' + path, {
     headers: { 'Content-Type': 'application/json', ...(App.token ? { 'Authorization': 'Bearer ' + App.token } : {}) },
     ...options
   });
@@ -24,6 +37,27 @@ function showView(name) {
 
 function setError(msg) {
   document.getElementById('authError').textContent = msg;
+}
+
+// 显示服务器配置（APP 中未配置服务器时调用）
+function showServerConfig() {
+  const overlay = document.getElementById('serverConfigOverlay');
+  if (overlay) overlay.style.display = 'flex';
+}
+
+function saveServerConfig() {
+  const input = document.getElementById('serverUrlInput');
+  let url = input.value.trim();
+  if (!url) { alert('请输入服务器地址'); return; }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'http://' + url;
+  }
+  App.serverUrl = url;
+  localStorage.setItem('serverUrl', url);
+  document.getElementById('serverConfigOverlay').style.display = 'none';
+  // 重新连接
+  if (App.socket) App.socket.disconnect();
+  connectSocket();
 }
 
 // ============ 认证 ============
@@ -254,7 +288,8 @@ function connectSocket() {
   if (App.socket) {
     App.socket.disconnect();
   }
-  App.socket = io({ auth: { token: App.token } });
+  const base = getBaseUrl();
+  App.socket = base ? io(base, { auth: { token: App.token } }) : io({ auth: { token: App.token } });
   if (typeof setupGameSocket === 'function') setupGameSocket();
 
   App.socket.on('prefs', (p) => {
@@ -328,8 +363,17 @@ function connectSocket() {
   });
 }
 
-// 自动登录
-if (App.token) {
+// 检测是否在 APP 中运行
+function isApp() {
+  return location.protocol === 'file:' || location.protocol === 'capacitor:' ||
+    (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform);
+}
+
+// 自动登录 / APP 服务器配置
+if (isApp() && !App.serverUrl) {
+  showView('auth');
+  showServerConfig();
+} else if (App.token) {
   enterLobby().catch(() => showView('auth'));
 } else {
   showView('auth');
