@@ -171,7 +171,7 @@ document.getElementById('joinFriendRoom').addEventListener('click', () => {
   });
 });
 
-document.getElementById('addAiBtn').addEventListener('click', () => {
+document.getElementById('addAiBtn')?.addEventListener('click', () => {
   App.socket.emit('addAi', (res) => {
     if (!res.ok) alert(res.error);
   });
@@ -189,26 +189,45 @@ document.getElementById('leaveRoomBtn').addEventListener('click', () => {
 });
 
 function showRoomWait(room) {
-  document.getElementById('roomWaitPanel').style.display = 'block';
+  document.getElementById('roomWaitPanel').style.display = 'flex';
   document.getElementById('roomIdDisplay').textContent = room.id;
   document.getElementById('roomBaseBet').textContent = room.baseBet || 100;
-  renderRoomPlayers(room);
+  renderRoomSeats(room);
 }
 
-function renderRoomPlayers(room) {
-  const list = document.getElementById('roomPlayersList');
+function renderRoomSeats(room) {
+  const container = document.getElementById('roomSeats');
   const isOwner = room.ownerId === App.user.id;
-  list.innerHTML = room.players.map(p => {
-    let chip = `<div class="player-chip">${p.nickname}${p.isAI ? ' (AI)' : ''} 🫘${p.beans || 0}`;
-    // 房主可踢非AI玩家
-    if (isOwner && !p.isAI && p.id !== App.user.id) {
-      chip += `<button class="kick-player-btn" data-kick="${p.id}" title="踢出">×</button>`;
+  let html = '';
+  for (let i = 0; i < room.maxPlayers; i++) {
+    const p = room.players[i];
+    if (p) {
+      const isOwnerSeat = p.id === room.ownerId;
+      html += `<div class="seat-slot filled ${isOwnerSeat ? 'owner' : ''}">
+        <div class="seat-label">座位 ${i + 1}${isOwnerSeat ? ' · 房主' : ''}</div>
+        <div class="seat-name">${p.nickname}${p.isAI ? ' (AI)' : ''}</div>
+        <div class="seat-beans">🫘 ${p.beans || 0}</div>
+        ${isOwner && !p.isAI && p.id !== App.user.id ? `<button class="kick-player-btn" data-kick="${p.id}">踢出</button>` : ''}
+      </div>`;
+    } else {
+      html += `<div class="seat-slot">
+        <div class="seat-label">座位 ${i + 1}（空）</div>
+        ${isOwner ? `<button class="add-ai-btn" data-add-ai="1">➕ 添加人机</button>` : `<div class="seat-label">等待加入…</div>`}
+      </div>`;
     }
-    chip += '</div>';
-    return chip;
-  }).join('');
+  }
+  container.innerHTML = html;
+
+  // 绑定添加人机（每个空座位）
+  container.querySelectorAll('[data-add-ai]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      App.socket.emit('addAi', (res) => {
+        if (!res.ok) alert(res.error);
+      });
+    });
+  });
   // 绑定踢人
-  list.querySelectorAll('[data-kick]').forEach(btn => {
+  container.querySelectorAll('[data-kick]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (confirm('确定踢出该玩家？')) {
         App.socket.emit('kickPlayer', { targetId: btn.dataset.kick }, (res) => {
@@ -217,8 +236,8 @@ function renderRoomPlayers(room) {
       }
     });
   });
-  // 添加AI按钮只对房主且未满显示
-  document.getElementById('addAiBtn').style.display = (isOwner && room.players.length < 3) ? 'inline-block' : 'none';
+
+  // 开始按钮：仅房主且满3人
   document.getElementById('startGameBtn').style.display = (isOwner && room.players.length >= 3) ? 'inline-block' : 'none';
 }
 
@@ -259,23 +278,29 @@ function connectSocket() {
   App.socket.on('roomList', (data) => {
     const list = document.getElementById('roomList');
     if (data.rooms.length === 0) {
-      list.innerHTML = '<p class="hint">暂无等待中的房间</p>';
+      list.innerHTML = '<p class="hint">暂无房间</p>';
       return;
     }
-    list.innerHTML = data.rooms.map(r => `
+    const stateMap = { waiting: '等待中', bidding: '叫分中', playing: '游戏中', ended: '已结束' };
+    list.innerHTML = data.rooms.map(r => {
+      const stateText = stateMap[r.state] || r.state;
+      const canJoin = r.state === 'waiting' && r.playerCount < r.maxPlayers;
+      const stateColor = r.state === 'waiting' ? '#4caf50' : '#ff9800';
+      return `
       <div class="room-item">
         <div class="room-info">
           <span class="room-id">${r.id}</span> · ${r.ownerName}的房间 ·
-          ${r.playerCount}/${r.maxPlayers}人${r.hasAI ? ' · 含AI' : ''}
+          ${r.playerCount}/${r.maxPlayers}人${r.hasAI ? ' · 含AI' : ''} ·
+          <span style="color:${stateColor}">${stateText}</span>
         </div>
-        <button class="join-btn" data-join="${r.id}" ${r.playerCount >= r.maxPlayers ? 'disabled' : ''}>加入</button>
-      </div>
-    `).join('');
+        <button class="join-btn" data-join="${r.id}" ${canJoin ? '' : 'disabled'}>${canJoin ? '加入' : (r.state === 'waiting' ? '已满' : '进行中')}</button>
+      </div>`;
+    }).join('');
     list.querySelectorAll('[data-join]').forEach(btn => {
       btn.addEventListener('click', () => {
         App.socket.emit('joinRoom', { roomId: btn.dataset.join }, (res) => {
           if (res.ok) {
-            if (res.room.state === 'playing') enterGame(res.room);
+            if (res.room.state === 'playing' || res.room.state === 'bidding') enterGame(res.room);
             else showRoomWait(res.room);
           } else alert(res.error);
         });
@@ -293,10 +318,10 @@ function connectSocket() {
     if (room.state === 'playing' || room.state === 'bidding') {
       enterGame(room);
     } else {
-      // 如果在游戏中返回等待（不太可能），否则刷新等待面板
       const panel = document.getElementById('roomWaitPanel');
       if (panel.style.display !== 'none' || room.players.some(p => p.id === App.user.id)) {
-        renderRoomPlayers(room);
+        if (panel.style.display === 'none') panel.style.display = 'flex';
+        renderRoomSeats(room);
       }
     }
   });

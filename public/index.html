@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>在线斗地主</title>
-  <link rel="stylesheet" href="/css/style.css?v=1.1.0">
+  <link rel="stylesheet" href="/css/style.css?v=1.2.0">
 </head>
 <body>
   <!-- 登录/注册页 -->
@@ -76,14 +76,15 @@
       </div>
     </div>
 
-    <div id="roomWaitPanel" class="room-wait" style="display:none">
-      <h2>房间号：<span id="roomIdDisplay"></span></h2>
-      <p class="hint">底注 <span id="roomBaseBet">100</span> 欢乐豆 · 将房间号分享给好友</p>
-      <div id="roomPlayersList" class="players-list"></div>
-      <div class="room-actions">
-        <button id="addAiBtn" class="btn-secondary">➕ 添加人机</button>
-        <button id="startGameBtn" class="btn-primary">▶ 开始游戏</button>
-        <button id="leaveRoomBtn" class="btn-secondary">离开房间</button>
+    <div id="roomWaitPanel" class="room-wait-overlay" style="display:none">
+      <div class="room-wait-box">
+        <h2>房间号：<span id="roomIdDisplay"></span></h2>
+        <p class="hint">底注 <span id="roomBaseBet">100</span> 欢乐豆 · 将房间号分享给好友</p>
+        <div id="roomSeats" class="room-seats"></div>
+        <div class="room-actions">
+          <button id="startGameBtn" class="btn-primary">▶ 开始游戏</button>
+          <button id="leaveRoomBtn" class="btn-secondary">离开房间</button>
+        </div>
       </div>
     </div>
   </div>
@@ -208,9 +209,9 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/sound.js?v=1.1.0"></script>
-  <script src="/js/app.js?v=1.1.0"></script>
-  <script src="/js/game.js?v=1.1.0"></script>
-  <script src="/js/admin.js?v=1.1.0"></script>
+  <script src="/js/sound.js?v=1.2.0"></script>
+  <script src="/js/app.js?v=1.2.0"></script>
+  <script src="/js/game.js?v=1.2.0"></script>
+  <script src="/js/admin.js?v=1.2.0"></script>
 </body>
 </html>

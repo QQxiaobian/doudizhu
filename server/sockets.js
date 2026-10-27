@@ -229,19 +229,18 @@ function broadcastOnline(io) {
   io.emit('onlineUpdate', { count: list.length, players: list });
 }
 
-// 广播房间列表
+// 广播房间列表（显示所有房间，含游戏中）
 function broadcastRoomList(io) {
   const list = [];
   for (const room of require('./room').rooms.values()) {
-    if (room.state === 'waiting') {
-      list.push({
-        id: room.id,
-        ownerName: room.players.find(p => p.id === room.ownerId)?.nickname || '未知',
-        playerCount: room.players.length,
-        maxPlayers: room.maxPlayers,
-        hasAI: room.players.some(p => p.isAI)
-      });
-    }
+    list.push({
+      id: room.id,
+      ownerName: room.players.find(p => p.id === room.ownerId)?.nickname || '未知',
+      playerCount: room.players.length,
+      maxPlayers: room.maxPlayers,
+      hasAI: room.players.some(p => p.isAI),
+      state: room.state
+    });
   }
   io.emit('roomList', { rooms: list });
 }
