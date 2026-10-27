@@ -198,8 +198,9 @@ function showRoomWait(room) {
 function renderRoomSeats(room) {
   const container = document.getElementById('roomSeats');
   const isOwner = room.ownerId === App.user.id;
+  const maxPlayers = room.maxPlayers || 3;
   let html = '';
-  for (let i = 0; i < room.maxPlayers; i++) {
+  for (let i = 0; i < maxPlayers; i++) {
     const p = room.players[i];
     if (p) {
       const isOwnerSeat = p.id === room.ownerId;

@@ -36,6 +36,21 @@ function initSockets(io) {
 
     socket.on('createRoom', ({ mode }, cb) => {
       mode = (mode === 'ai' || mode === 'friend') ? mode : 'mixed';
+      // 如果已在其他房间，先离开
+      const oldRoomId = socket.data.roomId;
+      if (oldRoomId) {
+        const oldRoom = getRoom(oldRoomId);
+        if (oldRoom) {
+          removePlayerFromRoom(oldRoom, user.id);
+          socket.leave(oldRoomId);
+          if (oldRoom.players.length === 0) {
+            require('./room').removeRoom(oldRoomId);
+          } else {
+            io.to(oldRoomId).emit('roomUpdate', roomInfo(oldRoom));
+          }
+        }
+        socket.data.roomId = null;
+      }
       const room = createRoom(user, { mode });
       const dbUser = db.prepare('SELECT beans FROM users WHERE id = ?').get(user.id);
       addPlayerToRoom(room, {
@@ -94,7 +109,25 @@ function initSockets(io) {
       const room = getRoom(roomId);
       if (!room) return cb({ ok: false, error: '房间不存在' });
       if (room.state !== 'waiting') return cb({ ok: false, error: '游戏已开始' });
-      if (room.players.some(p => p.id === user.id)) return cb({ ok: false, error: '你已在房间中' });
+      // 如果已在其他房间，先离开
+      const oldRoomId = socket.data.roomId;
+      if (oldRoomId && oldRoomId !== roomId) {
+        const oldRoom = getRoom(oldRoomId);
+        if (oldRoom) {
+          removePlayerFromRoom(oldRoom, user.id);
+          socket.leave(oldRoomId);
+          if (oldRoom.players.length === 0) {
+            require('./room').removeRoom(oldRoomId);
+          } else {
+            io.to(oldRoomId).emit('roomUpdate', roomInfo(oldRoom));
+          }
+        }
+      }
+      if (room.players.some(p => p.id === user.id)) {
+        socket.data.roomId = roomId;
+        socket.join(roomId);
+        return cb({ ok: true, room: roomInfo(room) });
+      }
       const dbUser = db.prepare('SELECT beans FROM users WHERE id = ?').get(user.id);
       const ok = addPlayerToRoom(room, {
         id: user.id, username: user.username,
@@ -251,6 +284,7 @@ function roomInfo(room) {
     mode: room.mode,
     state: room.state,
     ownerId: room.ownerId,
+    maxPlayers: room.maxPlayers,
     baseBet: room.baseBet,
     players: room.players.map(p => ({
       id: p.id,
